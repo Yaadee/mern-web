@@ -1,0 +1,3 @@
+const receiptSchema = mongose.receiptSchema({
+    
+})
