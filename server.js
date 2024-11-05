@@ -18,7 +18,7 @@ app.get("/", (req, res) => {
 
 // Connect to the MongoDB database
 mongoose
-  .connect(process.env.MONGODB_URI, {
+  .connect(process.env.DB, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -31,4 +31,3 @@ mongoose
   .catch((err) => {
     console.error("Database connection error:", err);
   });
-

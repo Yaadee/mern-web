@@ -13,7 +13,7 @@ const handleRegistration = async (req, res) => {
     // if user already exists
     const userExists = await User.findOne({ email: user }).exec();
     if (userExists) {
-      return res.status(409).json({ message: "User already exists" });
+      return res.status(409).json({ message: "User already exists with this email address" });
     }
 
     // Hashing password
