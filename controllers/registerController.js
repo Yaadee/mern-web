@@ -1,7 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const Address = require("../models/address");
+const Address = require("../models/Address");
 
 const handleRegistration = async (req, res) => {
   const {
@@ -20,42 +20,39 @@ const handleRegistration = async (req, res) => {
     createdAt,
   } = req.body;
 
+  // Required fields validation
   if (
     !firstName ||
-    // !middleName ||
     !lastName ||
     !email ||
     !phoneNumber ||
     !password ||
     !gender ||
-    // !address||
     !dateOfBirth
-    // isVolunteer === undefined ||
-    // !organization ||
-    // !organizationDescription ||
-    // !createdAt
+    // !address ||
+    // address.length === 0
   ) {
-    return res.status(400).json({ message: "All fields are required" });
+    return res
+      .status(400)
+      .json({ message: "All required fields must be provided" });
   }
+
+  // Validation for email and phone
   const validatePhone = /^\d{10}$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   if (!emailRegex.test(email)) {
     return res
       .status(400)
-      .json({ message: "Please provide valid email address" });
+      .json({ message: "Please provide a valid email address" });
   }
+
   if (!validatePhone.test(phoneNumber)) {
     return res
       .status(400)
       .json({ message: "Phone number should be 10 digits long" });
   }
 
-  if (!address || address.length === 0) {
-    return res
-      .status(400)
-      .json({ message: "At least one address is required" });
-  }
   try {
     // Check if user already exists
     const userExists = await User.findOne({
@@ -63,20 +60,15 @@ const handleRegistration = async (req, res) => {
     }).exec();
     if (userExists) {
       return res.status(409).json({
-        message: "User already exists with this email address or phone number ",
+        message: "User already exists with this email address or phone number",
       });
     }
 
     // Hash the password
     const hashedPwd = await bcrypt.hash(password, 10);
-    // Create the address document(s)
-    const addressRecords = await Address.insertMany(address);
 
-    // Extract the ObjectIds from the newly created address documents
-    const addressIds = addressRecords.map((addr) => addr._id);
-
-    // Create new user
-    const result = new User({
+    // Create the new user without addresses initially
+    const newUser = new User({
       firstName,
       middleName,
       lastName,
@@ -84,24 +76,45 @@ const handleRegistration = async (req, res) => {
       phoneNumber,
       password: hashedPwd,
       gender,
-      address: addressIds,
       dateOfBirth,
       isVolunteer,
       organization,
       organizationDescription,
       createdAt,
     });
-    await result.save();
+
+    // Save user to get the user's ID
+    const savedUser = await newUser.save();
+
+    // Save each address with the user's ID
+    const savedAddresses = await Promise.all(
+      address.map(async (addr) => {
+        const newAddress = new Address({
+          ...addr,
+          user: savedUser._id, // Set the user ID in each address
+        });
+        return await newAddress.save();
+      })
+    );
+
+    // Update the user with the address IDs
+    savedUser.address = savedAddresses.map((addr) => addr._id);
+    await savedUser.save();
 
     // Create JWT token (optional)
-    const token = jwt.sign({ id: result._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: savedUser._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
     // Respond with success message and token
-    res.status(201).json({ message: "User registered successfully", token });
+    res.status(201).json({
+      message: "User registered successfully",
+      token,
+      user: savedUser,
+      addresses: savedAddresses,
+    });
   } catch (error) {
-    console.error(error);
+    console.error("Error during user registration:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

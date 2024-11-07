@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const { v4: uuidv4 } = require("uuid");
-const Address = require("../models/address");
+const Address = require("./Address");
 
 const userSchema = new mongoose.Schema({
   id: {
@@ -36,10 +36,16 @@ const userSchema = new mongoose.Schema({
   },
   gender: {
     type: String,
-    enum: ["Male", "Female", "Other"],
+    enum: ["Male", "Female"],
     required: [true, "Gender is required to register"],
   },
-  address: [{ type: mongoose.Schema.Types.ObjectId, ref: "Address" }],
+  address: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Address",
+      // required: true,
+    },
+  ],
 
   dateOfBirth: {
     type: Date,
