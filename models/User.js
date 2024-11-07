@@ -1,7 +1,14 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+const { v4: uuidv4 } = require("uuid");
+const Address = require("../models/address");
 
 const userSchema = new mongoose.Schema({
+  id: {
+    type: String,
+    default: uuidv4,
+  },
+
   firstName: {
     type: String,
     required: [true, "First Name is required to register"],
@@ -17,7 +24,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, "Email is required to register"],
     unique: [true, "Email must be unique"],
-    match: [/.+\@.+\..+/, "Please fill a valid email address"],
   },
   phoneNumber: {
     type: String,
@@ -31,7 +37,23 @@ const userSchema = new mongoose.Schema({
   gender: {
     type: String,
     enum: ["Male", "Female", "Other"],
-    required: [true, "Gender is required to register"]
+    required: [true, "Gender is required to register"],
+  },
+  address: [{ type: mongoose.Schema.Types.ObjectId, ref: "Address" }],
+
+  dateOfBirth: {
+    type: Date,
+    required: [true, "Date of Birth is required to register"],
+  },
+  isVolunteer: {
+    type: Boolean,
+    required: false,
+  },
+  organization: {
+    type: String,
+  },
+  organizationDescription: {
+    type: String,
   },
   refreshToken: String,
   createdAt: {

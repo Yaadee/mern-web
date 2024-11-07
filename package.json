@@ -2,9 +2,8 @@
   "name": "bf-charity-organization",
   "version": "1.0.0",
   "main": "index.js",
-  "type": "module",
-    "scripts": {
-    "start": "node server.js",
+  "scripts": {
+    "start": "nodemon server.js",
     "dev": "nodemon server.js"
   },
   "keywords": [],
@@ -18,7 +17,8 @@
     "express": "^4.21.1",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.8.0"
+    "mongoose": "^8.8.0",
+    "uuid": "^11.0.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"
